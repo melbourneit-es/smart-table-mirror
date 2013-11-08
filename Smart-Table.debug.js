@@ -50,6 +50,7 @@
 })(window, angular);
 
 
+
 /* Directives */
 (function (angular) {
     "use strict";
@@ -68,6 +69,7 @@
                 link: function (scope, element, attr, ctrl) {
 
                     var templateObject;
+                    var firstDataWatch;
 
                     scope.$watch('config', function (config) {
                         var newConfig = angular.extend({}, defaultConfig, config),
@@ -111,11 +113,12 @@
                     }, true);
 
                     //if item are added or removed into the data model from outside the grid
-                    scope.$watch('dataCollection.length', function (oldValue, newValue) {
-                        if (oldValue !== newValue) {
+                    scope.$watch('dataCollection', function (oldValue, newValue) {
+                        if ((oldValue !== newValue) || firstDataWatch) {
+                            firstDataWatch = false;
                             ctrl.sortBy();//it will trigger the refresh... some hack ?
                         }
-                    });
+                    }, true);
                 }
             };
         }])
@@ -444,6 +447,7 @@
              * @param column
              */
             this.sortBy = function (column) {
+                column = column || scope.columns[scope.config.defaultSortColumn];
                 var index = scope.columns.indexOf(column);
                 if (index !== -1) {
                     if (column.isSortable === true) {
@@ -453,7 +457,7 @@
                         }
 
                         column.sortPredicate = column.sortPredicate || column.map;
-                        column.reverse = column.reverse !== true;
+                        //column.reverse = column.reverse !== true;
                         lastColumnSort = column;
                     }
                 }
@@ -613,86 +617,88 @@
 })(angular);
 
 
+
 angular.module('smartTable.templates', ['partials/defaultCell.html', 'partials/defaultHeader.html', 'partials/editableCell.html', 'partials/globalSearchCell.html', 'partials/pagination.html', 'partials/selectAllCheckbox.html', 'partials/selectionCheckbox.html', 'partials/smartTable.html']);
 
-angular.module("partials/defaultCell.html", []).run(["$templateCache", function ($templateCache) {
-    $templateCache.put("partials/defaultCell.html",
-        "{{formatedValue}}");
+angular.module("partials/defaultCell.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("partials/defaultCell.html",
+    "{{formatedValue}}");
 }]);
 
-angular.module("partials/defaultHeader.html", []).run(["$templateCache", function ($templateCache) {
-    $templateCache.put("partials/defaultHeader.html",
-        "<span class=\"header-content\" ng-class=\"{'sort-ascent':column.reverse==true,'sort-descent':column.reverse==false}\">{{column.label}}</span>");
+angular.module("partials/defaultHeader.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("partials/defaultHeader.html",
+    "<span class=\"header-content\" ng-class=\"{'sort-ascent':column.reverse==true,'sort-descent':column.reverse==false}\">{{column.label}}</span>");
 }]);
 
-angular.module("partials/editableCell.html", []).run(["$templateCache", function ($templateCache) {
-    $templateCache.put("partials/editableCell.html",
-        "<div ng-dblclick=\"toggleEditMode($event)\">\n" +
-            "    <span ng-hide=\"isEditMode\">{{value | format:column.formatFunction:column.formatParameter}}</span>\n" +
-            "\n" +
-            "    <form ng-submit=\"submit()\" ng-show=\"isEditMode\" name=\"myForm\">\n" +
-            "        <input name=\"myInput\" ng-model=\"value\" type=\"type\" input-type/>\n" +
-            "    </form>\n" +
-            "</div>");
+angular.module("partials/editableCell.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("partials/editableCell.html",
+    "<div ng-dblclick=\"toggleEditMode($event)\">\n" +
+    "    <span ng-hide=\"isEditMode\">{{value | format:column.formatFunction:column.formatParameter}}</span>\n" +
+    "\n" +
+    "    <form ng-submit=\"submit()\" ng-show=\"isEditMode\" name=\"myForm\">\n" +
+    "        <input name=\"myInput\" ng-model=\"value\" type=\"type\" input-type/>\n" +
+    "    </form>\n" +
+    "</div>");
 }]);
 
-angular.module("partials/globalSearchCell.html", []).run(["$templateCache", function ($templateCache) {
-    $templateCache.put("partials/globalSearchCell.html",
-        "<label>Search :</label>\n" +
-            "<input type=\"text\" ng-model=\"searchValue\"/>");
+angular.module("partials/globalSearchCell.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("partials/globalSearchCell.html",
+    "<label>Search :</label>\n" +
+    "<input type=\"text\" ng-model=\"searchValue\"/>");
 }]);
 
-angular.module("partials/pagination.html", []).run(["$templateCache", function ($templateCache) {
-    $templateCache.put("partials/pagination.html",
-        "<div class=\"pagination\">\n" +
-            "    <ul>\n" +
-            "        <li ng-repeat=\"page in pages\" ng-class=\"{active: page.active, disabled: page.disabled}\"><a\n" +
-            "                ng-click=\"selectPage(page.number)\">{{page.text}}</a></li>\n" +
-            "    </ul>\n" +
-            "</div> ");
+angular.module("partials/pagination.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("partials/pagination.html",
+    "<div class=\"pagination\">\n" +
+    "    <ul>\n" +
+    "        <li ng-repeat=\"page in pages\" ng-class=\"{active: page.active, disabled: page.disabled}\"><a\n" +
+    "                ng-click=\"selectPage(page.number)\">{{page.text}}</a></li>\n" +
+    "    </ul>\n" +
+    "</div> ");
 }]);
 
-angular.module("partials/selectAllCheckbox.html", []).run(["$templateCache", function ($templateCache) {
-    $templateCache.put("partials/selectAllCheckbox.html",
-        "<input class=\"smart-table-select-all\"  type=\"checkbox\" ng-model=\"holder.isAllSelected\"/>");
+angular.module("partials/selectAllCheckbox.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("partials/selectAllCheckbox.html",
+    "<input class=\"smart-table-select-all\"  type=\"checkbox\" ng-model=\"holder.isAllSelected\"/>");
 }]);
 
-angular.module("partials/selectionCheckbox.html", []).run(["$templateCache", function ($templateCache) {
-    $templateCache.put("partials/selectionCheckbox.html",
-        "<input type=\"checkbox\" ng-model=\"dataRow.isSelected\" stop-event=\"click\"/>");
+angular.module("partials/selectionCheckbox.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("partials/selectionCheckbox.html",
+    "<input type=\"checkbox\" ng-model=\"dataRow.isSelected\" stop-event=\"click\"/>");
 }]);
 
-angular.module("partials/smartTable.html", []).run(["$templateCache", function ($templateCache) {
-    $templateCache.put("partials/smartTable.html",
-        "<table class=\"smart-table\">\n" +
-            "    <thead>\n" +
-            "    <tr class=\"smart-table-global-search-row\" ng-show=\"isGlobalSearchActivated\">\n" +
-            "        <td class=\"smart-table-global-search\" column-span=\"{{columns.length}}\" colspan=\"{{columnSpan}}\">\n" +
-            "        </td>\n" +
-            "    </tr>\n" +
-            "    <tr class=\"smart-table-header-row\">\n" +
-            "        <th ng-repeat=\"column in columns\" ng-include=\"column.headerTemplateUrl\"\n" +
-            "            class=\"smart-table-header-cell {{column.headerClass}}\" scope=\"col\">\n" +
-            "        </th>\n" +
-            "    </tr>\n" +
-            "    </thead>\n" +
-            "    <tbody>\n" +
-            "    <tr ng-repeat=\"dataRow in displayedCollection\" ng-class=\"{selected:dataRow.isSelected}\"\n" +
-            "        class=\"smart-table-data-row\">\n" +
-            "        <td ng-repeat=\"column in columns\" class=\"smart-table-data-cell {{column.cellClass}}\"></td>\n" +
-            "    </tr>\n" +
-            "    </tbody>\n" +
-            "    <tfoot ng-show=\"isPaginationEnabled\">\n" +
-            "    <tr class=\"smart-table-footer-row\">\n" +
-            "        <td colspan=\"{{columns.length}}\">\n" +
-            "            <div pagination-smart-table=\"\" num-pages=\"numberOfPages\" max-size=\"maxSize\" current-page=\"currentPage\"></div>\n" +
-            "        </td>\n" +
-            "    </tr>\n" +
-            "    </tfoot>\n" +
-            "</table>\n" +
-            "\n" +
-            "\n" +
-            "");
+angular.module("partials/smartTable.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("partials/smartTable.html",
+    "<div class=\"smart-table-container\">\n" +
+    "    <table class=\"smart-table\">\n" +
+    "        <thead>\n" +
+    "        <tr class=\"smart-table-global-search-row\" ng-show=\"isGlobalSearchActivated\">\n" +
+    "            <td class=\"smart-table-global-search\" column-span=\"{{columns.length}}\" colspan=\"{{columnSpan}}\">\n" +
+    "            </td>\n" +
+    "        </tr>\n" +
+    "        <tr class=\"smart-table-header-row\">\n" +
+    "            <th ng-repeat=\"column in columns\" ng-include=\"column.headerTemplateUrl\"\n" +
+    "                class=\"smart-table-header-cell {{column.headerClass}}\" scope=\"col\">\n" +
+    "            </th>\n" +
+    "        </tr>\n" +
+    "        </thead>\n" +
+    "        <tbody>\n" +
+    "        <tr ng-repeat=\"dataRow in displayedCollection\"\n" +
+    "            ng-class=\"{selected:dataRow.isSelected, added:dataRow._added, deleted:dataRow._deleted, edited:dataRow._edited}\"\n" +
+    "            class=\"smart-table-data-row\">\n" +
+    "            <td ng-repeat=\"column in columns\" class=\"smart-table-data-cell {{column.cellClass}}\"></td>\n" +
+    "        </tr>\n" +
+    "        </tbody>\n" +
+    "        <tfoot ng-show=\"isPaginationEnabled\">\n" +
+    "        <tr class=\"smart-table-footer-row\">\n" +
+    "            <td colspan=\"{{columns.length}}\">\n" +
+    "                <div pagination-smart-table=\"\" num-pages=\"numberOfPages\" max-size=\"maxSize\"\n" +
+    "                     current-page=\"currentPage\"></div>\n" +
+    "            </td>\n" +
+    "        </tr>\n" +
+    "        </tfoot>\n" +
+    "    </table>\n" +
+    "</div>");
 }]);
 
 (function (angular) {
@@ -734,7 +740,7 @@ angular.module("partials/smartTable.html", []).run(["$templateCache", function (
                  * @param index
                  * @param item
                  */
-                    insertAt = function (arrayRef, index, item) {
+                insertAt = function (arrayRef, index, item) {
                     if (index >= 0 && index < arrayRef.length) {
                         arrayRef.splice(index, 0, item);
                     } else {
@@ -748,7 +754,7 @@ angular.module("partials/smartTable.html", []).run(["$templateCache", function (
                  * @param oldIndex
                  * @param newIndex
                  */
-                    moveAt = function (arrayRef, oldIndex, newIndex) {
+                moveAt = function (arrayRef, oldIndex, newIndex) {
                     var elementToMove;
                     if (oldIndex >= 0 && oldIndex < arrayRef.length && newIndex >= 0 && newIndex < arrayRef.length) {
                         elementToMove = arrayRef.splice(oldIndex, 1)[0];
@@ -764,7 +770,7 @@ angular.module("partials/smartTable.html", []).run(["$templateCache", function (
                  * @param reverse
                  * @returns {*}
                  */
-                    sort = function (arrayRef, sortAlgorithm, predicate, reverse) {
+                sort = function (arrayRef, sortAlgorithm, predicate, reverse) {
 
                     if (!sortAlgorithm || !angular.isFunction(sortAlgorithm)) {
                         return arrayRef;
@@ -780,7 +786,7 @@ angular.module("partials/smartTable.html", []).run(["$templateCache", function (
                  * @param predicate
                  * @returns {*}
                  */
-                    filter = function (arrayRef, filterAlgorithm, predicate) {
+                filter = function (arrayRef, filterAlgorithm, predicate) {
                     if (!filterAlgorithm || !angular.isFunction(filterAlgorithm)) {
                         return arrayRef;
                     } else {
@@ -795,7 +801,7 @@ angular.module("partials/smartTable.html", []).run(["$templateCache", function (
                  * @param length
                  * @returns {*}
                  */
-                    fromTo = function (arrayRef, min, length) {
+                fromTo = function (arrayRef, min, length) {
 
                     var out = [],
                         limit,
@@ -828,6 +834,7 @@ angular.module("partials/smartTable.html", []).run(["$templateCache", function (
             };
         });
 })(angular);
+
 
 
 (function (angular) {

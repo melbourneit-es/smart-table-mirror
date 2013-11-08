@@ -16,6 +16,7 @@
                 link: function (scope, element, attr, ctrl) {
 
                     var templateObject;
+                    var firstDataWatch;
 
                     scope.$watch('config', function (config) {
                         var newConfig = angular.extend({}, defaultConfig, config),
@@ -59,11 +60,12 @@
                     }, true);
 
                     //if item are added or removed into the data model from outside the grid
-                    scope.$watch('dataCollection.length', function (oldValue, newValue) {
-                        if (oldValue !== newValue) {
+                    scope.$watch('dataCollection', function (oldValue, newValue) {
+                        if ((oldValue !== newValue) || firstDataWatch) {
+                            firstDataWatch = false;
                             ctrl.sortBy();//it will trigger the refresh... some hack ?
                         }
-                    });
+                    }, true);
                 }
             };
         }])
