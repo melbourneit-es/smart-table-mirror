@@ -16,7 +16,7 @@
                 link: function (scope, element, attr, ctrl) {
 
                     var templateObject;
-                    var firstDataWatch;
+                    var firstDataWatch = true;
 
                     scope.$watch('config', function (config) {
                         var newConfig = angular.extend({}, defaultConfig, config),
